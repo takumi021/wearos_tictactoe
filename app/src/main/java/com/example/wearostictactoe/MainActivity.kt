@@ -4,11 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -23,6 +18,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -33,7 +30,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -64,25 +60,22 @@ private enum class CellState { EMPTY, X, O }
 fun LuxeTicTacToe() {
     var board by remember { mutableStateOf(List(9) { CellState.EMPTY }) }
     var isXTurn by remember { mutableStateOf(true) }
+    val gameHistory = remember { GameHistory() }
 
     val winner = remember(board) { calculateWinner(board) }
     val isDraw = winner == null && board.none { it == CellState.EMPTY }
     val status = when {
-        winner != null -> "${winner.name} wins ✨"
-        isDraw -> "Draw • Tap New Game"
+        winner != null -> {
+            gameHistory.addGame("${winner.name} wins ✨")
+            "${winner.name} wins ✨"
+        }
+        isDraw -> {
+            gameHistory.addGame("Draw")
+            "Draw • Tap New Game"
+        }
         isXTurn -> "X turn"
         else -> "O turn"
     }
-
-    val sweep by rememberInfiniteTransition(label = "ambient").animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(9000),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "sweep"
-    )
 
     Box(
         modifier = Modifier
@@ -137,10 +130,9 @@ fun LuxeTicTacToe() {
                         ),
                         shape = RoundedCornerShape(26.dp)
                     )
-                    .rotate(sweep / 36f)
                     .padding(6.dp)
             ) {
-                Column(verticalArrangement = Arrangement.SpaceEvenly) {
+                Column(verticalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxSize()) {
                     repeat(3) { row ->
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -167,18 +159,28 @@ fun LuxeTicTacToe() {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Button(
-                onClick = {
-                    board = List(9) { CellState.EMPTY }
-                    isXTurn = true
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF4A2A7A),
-                    contentColor = Color(0xFFE8D8FF)
-                ),
-                modifier = Modifier.height(36.dp)
-            ) {
-                Text("New Game")
+            if (winner != null || isDraw) {
+                Button(
+                    onClick = {
+                        board = List(9) { CellState.EMPTY }
+                        isXTurn = true
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF4A2A7A),
+                        contentColor = Color(0xFFE8D8FF)
+                    ),
+                    modifier = Modifier.height(36.dp)
+                ) {
+                    Text("New Game")
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            LazyColumn {
+                items(gameHistory.history) { game ->
+                    Text(text = game, color = Color.White)
+                }
             }
         }
     }

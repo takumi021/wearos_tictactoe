@@ -50,14 +50,14 @@ android {
 }
 
 dependencies {
-    val composeBom = platform("androidx.compose:compose-bom:2024.02.01")
+    val composeBom = platform("androidx.compose:compose-bom:2024.04.00")
     implementation(composeBom)
     androidTestImplementation(composeBom)
 
     implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.activity:activity-compose:1.10.1")
 
-    implementation("androidx.wear.compose:compose-material3:1.0.0")
+    implementation("androidx.wear.compose:compose-material3:1.0.1")
     implementation("androidx.wear.compose:compose-navigation:1.5.0")
 
     implementation("androidx.compose.ui:ui")
